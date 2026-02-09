@@ -195,9 +195,8 @@ form.addEventListener("submit", async (e) => {
     console.error(err);
     setEstado("❌ Error: " + (err?.message || String(err)), true);
   }
-});
 
-const form = document.getElementById("form");
+  const form = document.getElementById("form");
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -205,5 +204,10 @@ form.addEventListener("submit", async (e) => {
 });
 
 init();
+
+});
+
+
+
 
 
