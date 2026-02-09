@@ -222,3 +222,4 @@ if (areaFromUrl) {
   setEstado("Selecciona un área.");
 }
 
+
