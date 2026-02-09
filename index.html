@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventario - Diseño y Prototipado</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <div class="hero-title">
+        <h1>Inventario por Áreas</h1>
+        <p>Selecciona un área para ver, agregar, editar y registrar notas.</p>
+      </div>
+
+      <div id="toolbar" class="hero-actions actions" style="display:none;">
+        <input id="busqueda" type="search" placeholder="Buscar por nombre, código o ubicación..." />
+        <a id="btnAgregar" class="btn btn-primary" href="agregar.html">+ Agregar herramienta</a>
+        <button id="btnActualizar" class="btn">Actualizar</button>
+        <button id="btnToggleVista" class="btn">Vista lista</button>
+        <button id="btnVolverAreas" class="btn">← Áreas</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="estado" class="estado"></div>
+
+    <!-- Pantalla de ÁREAS -->
+    <section id="areasScreen" class="areas-grid">
+      <button class="area-card" data-area="Area creativa">
+        <div class="area-img">
+          <img src="assets/areas/area-creativa.jpg" alt="Área creativa">
+        </div>
+        <div class="area-inf">
+         <h2>Área creativa</h2>
+         <p>Área recreativa</p>
+        </div>
+      </button>
+      
+      <button class="area-card" data-area="Area digital">
+        <div class="area-img">
+          <img src="assets/areas/area-digital.jpg" alt="Area digital">
+        </div>
+        <div class="area-inf">
+         <h2>Área digital</h2>
+         <p>Equipo de cómputo.</p>
+        </div>
+      </button>
+
+      <button class="area-card" data-area="Granja 3D">
+        <div class="area-img">
+          <img src="assets/areas/granja-3d.jpg" alt="Granja 3D">
+        </div>
+        <div class="area-inf">
+         <h2>Granja 3D</h2>
+         <p>Impresoras 3D, filamento.</p>
+        </div>
+      </button>
+
+      <button class="area-card" data-area="Taller">
+        <div class="area-img">
+          <img src="assets/areas/taller.jpg" alt="Taller">
+        </div>
+        <div class="area-inf">
+         <h2>Taller</h2>
+         <p>Area de trabajo y herramienta pesada.</p>
+        </div>
+      </button>
+
+      <button class="area-card" data-area="Bodega de herramientas">
+        <div class="area-img">
+          <img src="assets/areas/bodega.jpg" alt="Bodega de herramientas">
+        </div>
+        <div class="area-inf">
+         <h2>Bodega de herramientas</h2>
+         <p>Resguardo general, repuestos y almacenaje.</p>
+        </div>
+      </button>
+    
+
+    <!-- Pantalla INVENTARIO (se muestra al elegir área) -->
+    <section id="inventarioScreen" style="display:none;">
+      <!-- Vista Cuadrícula -->
+      <section id="grid" class="grid"></section>
+
+      <!-- Vista Lista -->
+      <section id="sheetWrap" class="sheet" style="display:none;">
+        <div class="sheet-header">
+          <h2 id="tituloArea">Vista lista</h2>
+          <p class="muted">Como Excel. Click en “Ver” para ir al detalle.</p>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Código</th>
+                <th>Cantidad</th>
+                <th>Ubicación</th>
+                <th>Estado</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody id="tablaBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
