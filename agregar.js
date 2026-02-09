@@ -197,5 +197,13 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
+const form = document.getElementById("form");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  alert("✅ Submit detectado (JS sí está funcionando)");
+});
+
 init();
+
 
