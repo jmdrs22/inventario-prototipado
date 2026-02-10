@@ -3,101 +3,116 @@ const SUPABASE_ANON_KEY = "sb_publishable_CB3EcmLwEIyeLgORI8xQZg_NGFlXsy3";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const estadoEl = document.getElementById("estado");
-const card = document.getElementById("card");
-const notas = document.getElementById("notas");
+const img = document.getElementById("img");
+const nombreEl = document.getElementById("nombre");
+const metaEl = document.getElementById("meta");
+const notasEl = document.getElementById("notas");
+const badgeWrap = document.getElementById("badgeWrap");
 
-const btnGuardarNotas = document.getElementById("btnGuardarNotas");
+const btnGuardar = document.getElementById("btnGuardar");
 const btnEliminar = document.getElementById("btnEliminar");
-const btnVolver = document.getElementById("btnVolver");
 const btnEditar = document.getElementById("btnEditar");
 
-function setEstado(msg, tipo = "info") {
-  estadoEl.className = `estado ${tipo}`;
-  estadoEl.textContent = msg || "";
+function setEstado(msg, isError = false) {
+  estadoEl.textContent = msg;
+  estadoEl.className = "estado" + (isError ? " error" : "");
 }
 
 function safe(v) {
-  return (v ?? "").toString().replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  return (v === null || v === undefined || v === "") ? "-" : String(v);
 }
 
-function getParam(name) {
-  return new URLSearchParams(location.search).get(name);
+function badgeHTML(estado) {
+  if (estado === "bueno") return `<span class="badge success">Buen estado</span>`;
+  if (estado === "mantenimiento") return `<span class="badge warning">Mantenimiento</span>`;
+  if (estado === "urgente") return `<span class="badge danger">Urgente</span>`;
+  return `<span class="badge neutral">Sin estado</span>`;
 }
 
-const id = getParam("id");
-const area = getParam("area");
+function getId() {
+  const p = new URLSearchParams(location.search);
+  const id = p.get("id");
+  return id ? Number(id) : null;
+}
 
-if (area) btnVolver.href = `index.html?area=${encodeURIComponent(area)}`;
-btnEditar.href = `agregar.html?id=${encodeURIComponent(id)}&area=${encodeURIComponent(area || "")}`;
+const id = getId();
 
-async function cargar() {
-  setEstado("Cargando…", "info");
+async function cargarDetalle() {
+  if (!id) {
+    setEstado("No se encontró el ID en la URL.", true);
+    return;
+  }
+
+  btnEditar.href = `agregar.html?id=${encodeURIComponent(id)}`;
+
+  setEstado("Cargando detalle...");
 
   const { data, error } = await supabaseClient
     .from("herramientas")
-    .select("id, area, nombre, codigo, cantidad, ubicacion, estado, imagen_url, notas, created_at")
+    .select("id, area, codigo, nombre, cantidad, ubicacion, estado, imagen_url, notas")
     .eq("id", id)
     .single();
 
   if (error) {
-    console.error(error);
-    setEstado(`Error: ${error.message}`, "error");
+    setEstado("Error: " + error.message, true);
     return;
   }
 
-  const img = data.imagen_url
-    ? `<img src="${data.imagen_url}" alt="${safe(data.nombre)}" />`
-    : `<div class="img-empty">Sin imagen</div>`;
+  nombreEl.textContent = safe(data.nombre);
+  badgeWrap.innerHTML = badgeHTML(data.estado);
 
-  card.innerHTML = `
-    <div class="detail-img">${img}</div>
-    <div class="detail-body">
-      <h2>${safe(data.nombre)}</h2>
-      <div class="meta">
-        <div><b>Área:</b> ${safe(data.area || "-")}</div>
-        <div><b>Código:</b> ${safe(data.codigo || "-")}</div>
-        <div><b>Cantidad:</b> ${safe(data.cantidad ?? "-")}</div>
-        <div><b>Ubicación:</b> ${safe(data.ubicacion || "-")}</div>
-        <div><b>Estado:</b> ${safe(data.estado || "-")}</div>
-      </div>
-    </div>
+  metaEl.innerHTML = `
+    <strong>Área:</strong> ${safe(data.area)} <br/>
+    <strong>Código:</strong> ${safe(data.codigo)} &nbsp; | &nbsp;
+    <strong>Cantidad:</strong> ${safe(data.cantidad)} <br/>
+    <strong>Ubicación:</strong> ${safe(data.ubicacion)}
   `;
 
-  notas.value = data.notas || "";
-  setEstado("", "ok");
+  notasEl.value = data.notas || "";
+  img.src = data.imagen_url || "https://via.placeholder.com/600x400?text=Sin+imagen";
+
+  setEstado("Listo.");
 }
 
-btnGuardarNotas.addEventListener("click", async () => {
-  try {
-    setEstado("Guardando notas…", "info");
-    const { error } = await supabaseClient
-      .from("herramientas")
-      .update({ notas: notas.value })
-      .eq("id", id);
+async function guardarNotas() {
+  if (!id) return;
+  setEstado("Guardando notas...");
 
-    if (error) throw error;
-    setEstado(" Notas guardadas.", "ok");
-  } catch (e) {
-    console.error(e);
-    setEstado(`${e.message}`, "error");
+  const { error } = await supabaseClient
+    .from("herramientas")
+    .update({ notas: notasEl.value })
+    .eq("id", id);
+
+  if (error) {
+    setEstado("No se pudo guardar: " + error.message, true);
+    return;
   }
-});
 
-btnEliminar.addEventListener("click", async () => {
-  if (!confirm("¿Seguro que deseas eliminar esta herramienta?")) return;
+  setEstado("Notas guardadas ✅");
+}
 
-  try {
-    setEstado("Eliminando…", "info");
-    const { error } = await supabaseClient.from("herramientas").delete().eq("id", id);
-    if (error) throw error;
+async function eliminarHerramienta() {
+  if (!id) return;
+  const ok = confirm("¿Eliminar esta herramienta? Esta acción no se puede deshacer.");
+  if (!ok) return;
 
-    setEstado("Eliminada.", "ok");
-    setTimeout(() => (location.href = btnVolver.href), 700);
-  } catch (e) {
-    console.error(e);
-    setEstado(` ${e.message}`, "error");
+  setEstado("Eliminando...");
+
+  const { error } = await supabaseClient
+    .from("herramientas")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    setEstado("No se pudo eliminar: " + error.message, true);
+    return;
   }
-});
 
-cargar();
+  setEstado("✅ Eliminada. Regresando...");
+  setTimeout(() => (location.href = "index.html"), 600);
+}
 
+btnGuardar.addEventListener("click", guardarNotas);
+btnEliminar.addEventListener("click", eliminarHerramienta);
+
+cargarDetalle();
