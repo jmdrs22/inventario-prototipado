@@ -67,13 +67,32 @@ imagenInput?.addEventListener("change", () => {
   preview.style.display = "block";
 });
 
+function makeUUID() {
+  // 1) Si el navegador soporta randomUUID (Chrome moderno, Android moderno)
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+
+  // 2) Fallback (funciona en iPhone/Safari viejos)
+  // No es “perfecto” como UUID real, pero sirve perfecto para nombres de archivos.
+  return (
+    "id-" +
+    Date.now().toString(16) +
+    "-" +
+    Math.random().toString(16).slice(2) +
+    "-" +
+    Math.random().toString(16).slice(2)
+  );
+}
+
 async function subirImagen(file) {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${crypto.randomUUID()}.${ext}`;
+  const safeExt = ["jpg", "jpeg", "png", "webp"].includes(ext) ? ext : "jpg";
+  const path = `${makeUUID()}.${safeExt}`;
 
   const { error: uploadError } = await supabaseClient
     .storage
-    .from("herramientas")
+    .from("herramientas") // <- bucket (minúsculas)
     .upload(path, file, { upsert: false });
 
   if (uploadError) throw uploadError;
@@ -85,6 +104,7 @@ async function subirImagen(file) {
 
   return data.publicUrl;
 }
+
 
 // Cargar si es edición o precargar área si viene desde index
 async function init() {
@@ -170,7 +190,7 @@ form.addEventListener("submit", async (e) => {
 
       if (error) throw error;
 
-      setEstado("✅ Herramienta guardada correctamente");
+      setEstado("Herramienta guardada correctamente");
       form.reset();
       cantidad.value = 1;
       imagenActual = null;
@@ -188,16 +208,17 @@ form.addEventListener("submit", async (e) => {
 
     if (error) throw error;
 
-    setEstado("✅ Cambios guardados correctamente");
+    setEstado("Cambios guardados correctamente");
     setTimeout(() => (location.href = `detalle.html?id=${encodeURIComponent(id)}`), 600);
 
   } catch (err) {
     console.error(err);
-    setEstado("❌ Error: " + (err?.message || String(err)), true);
+    setEstado("Error: " + (err?.message || String(err)), true);
   }
 });
 
 init();
+
 
 
 
