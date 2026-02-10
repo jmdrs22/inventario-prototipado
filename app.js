@@ -4,151 +4,88 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 const estadoEl = document.getElementById("estado");
 
-// Screens
 const areasScreen = document.getElementById("areasScreen");
 const inventarioScreen = document.getElementById("inventarioScreen");
-const toolbar = document.getElementById("toolbar");
-
-// Toolbar controls
-const btnActualizar = document.getElementById("btnActualizar");
-const busqueda = document.getElementById("busqueda");
-const btnToggleVista = document.getElementById("btnToggleVista");
-const btnVolverAreas = document.getElementById("btnVolverAreas");
-const btnAgregar = document.getElementById("btnAgregar");
 const tituloArea = document.getElementById("tituloArea");
 
-// Views
 const grid = document.getElementById("grid");
 const sheetWrap = document.getElementById("sheetWrap");
-const tablaBody = document.getElementById("tablaBody");
+const sheetBody = document.getElementById("sheetBody");
 
-// Área actual
+const q = document.getElementById("q");
+const btnRefresh = document.getElementById("btnRefresh");
+const btnVista = document.getElementById("btnVista");
+const btnAgregar = document.getElementById("btnAgregar");
+const btnVolverAreas = document.getElementById("btnVolverAreas");
+
 let areaActual = null;
-
-// Data
-let cache = [];
 let vista = "grid"; // grid | list
+let cache = [];
 
-function setEstado(msg, isError = false) {
-  estadoEl.textContent = msg;
-  estadoEl.className = "estado" + (isError ? " error" : "");
+function setEstado(msg, tipo = "info") {
+  estadoEl.className = `estado ${tipo}`;
+  estadoEl.textContent = msg || "";
+}
+
+function badgeEstado(estado) {
+  const v = (estado || "bueno").toLowerCase();
+  if (v === "urgente") return `<span class="badge danger">Urgente</span>`;
+  if (v === "mantenimiento") return `<span class="badge warning">Mantenimiento</span>`;
+  return `<span class="badge success">Buen estado</span>`;
 }
 
 function safe(v) {
-  return (v === null || v === undefined || v === "") ? "-" : String(v);
+  return (v ?? "").toString().replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-function imgOrPlaceholder(url) {
-  return url || "https://via.placeholder.com/800x500?text=Sin+imagen";
+function getAreaFromUrl() {
+  const p = new URLSearchParams(location.search);
+  return p.get("area");
 }
 
-function badgeHTML(estado) {
-  if (estado === "bueno") return `<span class="badge success">Buen estado</span>`;
-  if (estado === "mantenimiento") return `<span class="badge warning">Mantenimiento</span>`;
-  if (estado === "urgente") return `<span class="badge danger">Urgente</span>`;
-  return `<span class="badge neutral">Sin estado</span>`;
+function setUrlArea(area) {
+  const u = new URL(location.href);
+  if (area) u.searchParams.set("area", area);
+  else u.searchParams.delete("area");
+  history.replaceState({}, "", u.toString());
 }
 
-function renderGrid(lista) {
-  grid.innerHTML = "";
+function abrirArea(area) {
+  areaActual = area;
+  setUrlArea(area);
 
-  if (!lista.length) {
-    setEstado(`No hay herramientas en: ${areaActual}`);
-    return;
-  }
+  areasScreen.style.display = "none";
+  inventarioScreen.style.display = "block";
+  tituloArea.textContent = `Área: ${area}`;
 
-  setEstado(`Área: ${areaActual} · ${lista.length} herramienta(s)`);
+  // link a agregar con area
+  btnAgregar.href = `agregar.html?area=${encodeURIComponent(area)}`;
 
-  for (const h of lista) {
-    const card = document.createElement("article");
-    card.className = "card";
-
-    card.innerHTML = `
-      <a class="card-link" href="detalle.html?id=${encodeURIComponent(h.id)}">
-        <div class="card-img">
-          <img src="${imgOrPlaceholder(h.imagen_url)}" alt="Imagen" loading="lazy" />
-        </div>
-
-        <div class="card-body">
-          <div class="card-title">
-            <h2>${safe(h.nombre)}</h2>
-          </div>
-
-          ${badgeHTML(h.estado)}
-
-          <p class="meta">
-            <strong>Código:</strong> ${safe(h.codigo)} &nbsp; | &nbsp;
-            <strong>Cantidad:</strong> ${safe(h.cantidad)} <br/>
-            <strong>Ubicación:</strong> ${safe(h.ubicacion)}
-          </p>
-
-          <div class="hint">Click para ver detalle, editar y notas</div>
-        </div>
-      </a>
-    `;
-
-    grid.appendChild(card);
-  }
+  cargar();
 }
 
-function renderList(lista) {
-  tablaBody.innerHTML = "";
-
-  for (const h of lista) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${safe(h.id)}</td>
-      <td>${safe(h.nombre)}</td>
-      <td>${safe(h.codigo)}</td>
-      <td>${safe(h.cantidad)}</td>
-      <td>${safe(h.ubicacion)}</td>
-      <td>${badgeHTML(h.estado)}</td>
-      <td><a class="link" href="detalle.html?id=${encodeURIComponent(h.id)}">Ver</a></td>
-    `;
-    tablaBody.appendChild(tr);
-  }
-}
-
-function aplicarFiltroYRender() {
-  const q = (busqueda.value || "").toLowerCase().trim();
-
-  const lista = !q
-    ? cache
-    : cache.filter(h =>
-        (h.nombre || "").toLowerCase().includes(q) ||
-        (h.codigo || "").toLowerCase().includes(q) ||
-        (h.ubicacion || "").toLowerCase().includes(q) ||
-        (h.estado || "").toLowerCase().includes(q)
-      );
-
-  if (vista === "grid") {
-    sheetWrap.style.display = "none";
-    grid.style.display = "grid";
-    renderGrid(lista);
-  } else {
-    grid.style.display = "none";
-    sheetWrap.style.display = "block";
-    tituloArea.textContent = `Vista lista · ${areaActual}`;
-    setEstado(`Área: ${areaActual} · ${lista.length} herramienta(s)`);
-    renderList(lista);
-  }
+function volverAreas() {
+  areaActual = null;
+  setUrlArea(null);
+  areasScreen.style.display = "grid";
+  inventarioScreen.style.display = "none";
+  setEstado("");
 }
 
 async function cargar() {
   if (!areaActual) return;
 
-  setEstado("Cargando inventario...");
-  grid.innerHTML = "";
-  tablaBody.innerHTML = "";
+  setEstado("Cargando herramientas…", "info");
 
   const { data, error } = await supabaseClient
     .from("herramientas")
-    .select("id, codigo, nombre, cantidad, ubicacion, estado, imagen_url, area")
+    .select("id, area, nombre, codigo, cantidad, ubicacion, estado, imagen_url, created_at")
     .eq("area", areaActual)
     .order("id", { ascending: true });
 
   if (error) {
-    setEstado("Error: " + error.message, true);
+    console.error(error);
+    setEstado(`Error: ${error.message}`, "error");
     return;
   }
 
@@ -156,70 +93,107 @@ async function cargar() {
   aplicarFiltroYRender();
 }
 
-function abrirArea(area) {
-  areaActual = area;
+function aplicarFiltroYRender() {
+  const term = (q.value || "").trim().toLowerCase();
 
-  // UI: cambia screens
-  areasScreen.style.display = "none";
-  inventarioScreen.style.display = "block";
-  toolbar.style.display = "flex";
+  const lista = (cache || []).filter((h) => {
+    if (!term) return true;
+    const s =
+      `${h.nombre || ""} ${h.codigo || ""} ${h.ubicacion || ""}`.toLowerCase();
+    return s.includes(term);
+  });
 
-  // set links
-  btnAgregar.href = `agregar.html?area=${encodeURIComponent(areaActual)}`;
-
-  // reset
-  busqueda.value = "";
-  vista = "grid";
-  btnToggleVista.textContent = "Vista lista";
-
-  // carga
-  cargar();
-
-  // guarda en URL (útil para QR por área)
-  const url = new URL(location.href);
-  url.searchParams.set("area", areaActual);
-  history.replaceState({}, "", url.toString());
+  if (vista === "grid") {
+    sheetWrap.style.display = "none";
+    grid.style.display = "grid";
+    renderGrid(lista);
+    btnVista.textContent = "Vista lista";
+  } else {
+    grid.style.display = "none";
+    sheetWrap.style.display = "block";
+    renderList(lista);
+    btnVista.textContent = "Vista cuadriculas";
+  }
 }
 
-function volverAreas() {
-  areaActual = null;
-  cache = [];
+function renderGrid(lista) {
+  grid.innerHTML = "";
+  setEstado(`Mostrando ${lista.length} herramienta(s).`, "ok");
 
-  areasScreen.style.display = "grid";
-  inventarioScreen.style.display = "none";
-  toolbar.style.display = "none";
+  for (const h of lista) {
+    const card = document.createElement("article");
+    card.className = "card";
 
-  setEstado("Selecciona un área.");
+    const img = h.imagen_url
+      ? `<img src="${h.imagen_url}" alt="${safe(h.nombre)}" />`
+      : `<div class="img-empty">Sin imagen</div>`;
 
-  const url = new URL(location.href);
-  url.searchParams.delete("area");
-  history.replaceState({}, "", url.toString());
+    card.innerHTML = `
+      <div class="card-img">${img}</div>
+      <div class="card-body">
+        <div class="card-title-row">
+          <h3 class="card-title">${safe(h.nombre)}</h3>
+          ${badgeEstado(h.estado)}
+        </div>
+        <div class="meta">
+          <div><b>Código:</b> ${safe(h.codigo || "-")}</div>
+          <div><b>Cantidad:</b> ${safe(h.cantidad ?? "-")}</div>
+          <div><b>Ubicación:</b> ${safe(h.ubicacion || "-")}</div>
+        </div>
+        <div class="hint">Click para ver detalle y agregar notas</div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => {
+      location.href = `detalle.html?id=${encodeURIComponent(h.id)}&area=${encodeURIComponent(areaActual)}`;
+    });
+
+    grid.appendChild(card);
+  }
 }
 
-// Click en cards de área
-document.querySelectorAll(".area-card").forEach(btn => {
+function renderList(lista) {
+  sheetBody.innerHTML = "";
+  setEstado(`Mostrando ${lista.length} herramienta(s).`, "ok");
+
+  for (const h of lista) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${safe(h.id)}</td>
+      <td>${safe(h.nombre)}</td>
+      <td>${safe(h.codigo || "-")}</td>
+      <td>${safe(h.cantidad ?? "-")}</td>
+      <td>${safe(h.ubicacion || "-")}</td>
+      <td>${badgeEstado(h.estado)}</td>
+    `;
+    tr.addEventListener("click", () => {
+      location.href = `detalle.html?id=${encodeURIComponent(h.id)}&area=${encodeURIComponent(areaActual)}`;
+    });
+    sheetBody.appendChild(tr);
+  }
+}
+
+// Eventos
+document.querySelectorAll(".area-card").forEach((btn) => {
   btn.addEventListener("click", () => abrirArea(btn.dataset.area));
 });
 
-// Toolbar
-btnActualizar.addEventListener("click", cargar);
-busqueda.addEventListener("input", aplicarFiltroYRender);
+btnVolverAreas.addEventListener("click", (e) => {
+  e.preventDefault();
+  volverAreas();
+});
 
-btnToggleVista.addEventListener("click", () => {
-  vista = (vista === "grid") ? "list" : "grid";
-  btnToggleVista.textContent = (vista === "grid") ? "Vista lista" : "Vista cuadrícula";
+btnRefresh.addEventListener("click", () => cargar());
+btnVista.addEventListener("click", () => {
+  vista = vista === "grid" ? "list" : "grid";
   aplicarFiltroYRender();
 });
 
-btnVolverAreas.addEventListener("click", volverAreas);
+q.addEventListener("input", () => aplicarFiltroYRender());
 
-// Si viene desde un QR por área (URL con ?area=...)
-const params = new URLSearchParams(location.search);
-const areaFromUrl = params.get("area");
-if (areaFromUrl) {
-  abrirArea(areaFromUrl);
-} else {
-  setEstado("Selecciona un área.");
-}
+// Auto-abrir área por URL
+const areaUrl = getAreaFromUrl();
+if (areaUrl) abrirArea(areaUrl);
+else volverAreas();
 
 
