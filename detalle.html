@@ -11,22 +11,34 @@
   <header class="topbar">
     <h1>Detalle</h1>
     <div class="actions">
-      <a id="btnVolver" class="btn" href="index.html">← Volver</a>
-      <a id="btnEditar" class="btn primary" href="#">Editar</a>
+      <a class="btn" href="index.html">← Volver</a>
+      <a id="btnEditar" class="btn" href="#">Editar</a>
     </div>
   </header>
 
   <main class="container">
     <div id="estado" class="estado"></div>
 
-    <section id="card" class="detail-card"></section>
+    <section class="detalle">
+      <div class="detalle-img">
+        <img id="img" src="https://via.placeholder.com/600x400?text=Sin+imagen" alt="Imagen herramienta">
+      </div>
 
-    <section class="notes">
-      <h2>Notas</h2>
-      <textarea id="notas" rows="6" placeholder="Escribe notas, mantenimiento, observaciones..."></textarea>
-      <div class="row">
-        <button id="btnGuardarNotas" class="btn primary">Guardar notas</button>
-        <button id="btnEliminar" class="btn danger">Eliminar herramienta</button>
+      <div class="detalle-info">
+        <h2 id="nombre">-</h2>
+        <div id="badgeWrap"></div>
+
+        <p class="meta" id="meta">-</p>
+
+        <label class="label" for="notas">Notas</label>
+        <textarea id="notas" rows="8" placeholder="Mantenimiento, observaciones, piezas faltantes, etc."></textarea>
+
+        <div class="row">
+          <button id="btnGuardar">Guardar notas</button>
+          <button id="btnEliminar" class="btn-danger">Eliminar</button>
+        </div>
+
+        <p class="hint">Las notas se guardan en Supabase (columna <strong>notas</strong>).</p>
       </div>
     </section>
   </main>
@@ -34,7 +46,5 @@
   <script src="detalle.js"></script>
 </body>
 </html>
-
-
 
 
