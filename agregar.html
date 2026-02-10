@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agregar herramienta</title>
+  <title>Agregar / Editar herramienta</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header class="topbar">
-    <h1>Agregar herramienta</h1>
+    <h1 id="pageTitle">Agregar herramienta</h1>
     <div class="actions">
       <a class="btn" href="index.html">← Volver</a>
     </div>
@@ -20,10 +20,10 @@
 
     <form id="form" class="form">
       <label class="label">Área *</label>
-      <select id="areaSel" required>
-        <option value="">Selecciona…</option>
-        <option value="Area creativa">Area creativa</option>
-        <option value="Area digital">Area digital</option>
+      <select id="area" required>
+        <option value="">Selecciona un área</option>
+        <option value="Area creativa">Área creativa</option>
+        <option value="Area digital">Área digital</option>
         <option value="Granja 3D">Granja 3D</option>
         <option value="Taller">Taller</option>
         <option value="Bodega de herramientas">Bodega de herramientas</option>
@@ -71,10 +71,3 @@
   <script src="agregar.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
