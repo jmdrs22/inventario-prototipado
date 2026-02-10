@@ -3,28 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventario por Áreas</title>
+  <title>Inventario - Diseño y Prototipado</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header class="hero">
     <div class="hero-overlay"></div>
-    <div class="hero-content container">
-      <h1>Inventario por Áreas</h1>
-      <p>Selecciona un área para ver, agregar, editar y registrar notas.</p>
 
-      <div class="toolbar">
-        <input id="q" class="search" placeholder="Buscar por nombre, código o ubicación..." />
-        <div class="toolbar-actions">
-          <a id="btnAgregar" class="btn primary" href="agregar.html">+ Agregar herramienta</a>
-          <button id="btnRefresh" class="btn">Actualizar</button>
-          <button id="btnVista" class="btn">Vista lista</button>
-        </div>
+    <div class="hero-content">
+      <div class="hero-title">
+        <h1>Inventario por Áreas</h1>
+        <p>Selecciona un área para ver, agregar, editar y registrar notas.</p>
       </div>
 
-      <div class="subtoolbar">
-        <a id="btnVolverAreas" class="btn soft" href="index.html">← Áreas</a>
+      <div id="toolbar" class="hero-actions actions" style="display:none;">
+        <input id="busqueda" type="search" placeholder="Buscar por nombre, código o ubicación..." />
+        <a id="btnAgregar" class="btn btn-primary" href="agregar.html">+ Agregar herramienta</a>
+        <button id="btnActualizar" class="btn">Actualizar</button>
+        <button id="btnToggleVista" class="btn">Vista lista</button>
+        <button id="btnVolverAreas" class="btn">← Áreas</button>
       </div>
     </div>
   </header>
@@ -32,70 +30,88 @@
   <main class="container">
     <div id="estado" class="estado"></div>
 
-    <!-- Pantalla AREAS -->
+    <!-- Pantalla de ÁREAS -->
     <section id="areasScreen" class="areas-grid">
       <button class="area-card" data-area="Area creativa">
-        <img src="assets/areas/creativa.jpg" alt="Área creativa" />
-        <div class="area-card-body">
-          <h2>Área creativa</h2>
-          <p>Materiales creativos, manuales y herramientas de apoyo.</p>
+        <div class="area-img">
+          <img src="assets/areas/area-creativa.jpg" alt="Área creativa">
+        </div>
+        <div class="area-inf">
+         <h2>Área creativa</h2>
+         <p>Área recreativa</p>
         </div>
       </button>
-
+      
       <button class="area-card" data-area="Area digital">
-        <img src="assets/areas/digital.jpg" alt="Área digital" />
-        <div class="area-card-body">
-          <h2>Área digital</h2>
-          <p>Equipos de cómputo, periféricos y herramientas digitales.</p>
+        <div class="area-img">
+          <img src="assets/areas/area-digital.jpg" alt="Area digital">
+        </div>
+        <div class="area-inf">
+         <h2>Área digital</h2>
+         <p>Equipo de cómputo.</p>
         </div>
       </button>
 
       <button class="area-card" data-area="Granja 3D">
-        <img src="assets/areas/granja3d.jpg" alt="Granja 3D" />
-        <div class="area-card-body">
-          <h2>Granja 3D</h2>
-          <p>Impresoras 3D, filamentos, refacciones y consumibles.</p>
+        <div class="area-img">
+          <img src="assets/areas/granja-3d.jpg" alt="Granja 3D">
+        </div>
+        <div class="area-inf">
+         <h2>Granja 3D</h2>
+         <p>Impresoras 3D, filamento.</p>
         </div>
       </button>
 
       <button class="area-card" data-area="Taller">
-        <img src="assets/areas/taller.jpg" alt="Taller" />
-        <div class="area-card-body">
-          <h2>Taller</h2>
-          <p>Herramientas de uso general, trabajo y mantenimiento.</p>
+        <div class="area-img">
+          <img src="assets/areas/taller.jpg" alt="Taller">
+        </div>
+        <div class="area-inf">
+         <h2>Taller</h2>
+         <p>Area de trabajo y herramienta pesada.</p>
         </div>
       </button>
 
       <button class="area-card" data-area="Bodega de herramientas">
-        <img src="assets/areas/bodega.jpg" alt="Bodega de herramientas" />
-        <div class="area-card-body">
-          <h2>Bodega de herramientas</h2>
-          <p>Resguardo general, repuestos y almacenaje.</p>
+        <div class="area-img">
+          <img src="assets/areas/bodega.jpg" alt="Bodega de herramientas">
+        </div>
+        <div class="area-inf">
+         <h2>Bodega de herramientas</h2>
+         <p>Resguardo general, repuestos y almacenaje.</p>
         </div>
       </button>
     </section>
 
     <!-- Pantalla INVENTARIO (se muestra al elegir área) -->
-    <section id="inventarioScreen" class="inventario" style="display:none;">
-      <h2 id="tituloArea" class="area-title"></h2>
+    <section id="inventarioScreen" style="display:none;">
+      <!-- Vista Cuadrícula -->
+      <section id="grid" class="grid"></section>
 
-      <div id="grid" class="grid"></div>
+      <!-- Vista Lista -->
+      <section id="sheetWrap" class="sheet" style="display:none;">
+        <div class="sheet-header">
+          <h2 id="tituloArea">Vista lista</h2>
+          <p class="muted">Como Excel. Click en “Ver” para ir al detalle.</p>
+        </div>
 
-      <div id="sheetWrap" class="sheet-wrap" style="display:none;">
-        <table class="sheet">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Código</th>
-              <th>Cantidad</th>
-              <th>Ubicación</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody id="sheetBody"></tbody>
-        </table>
-      </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Código</th>
+                <th>Cantidad</th>
+                <th>Ubicación</th>
+                <th>Estado</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody id="tablaBody"></tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
 
