@@ -88,7 +88,7 @@ async function guardarNotas() {
     return;
   }
 
-  setEstado("Notas guardadas ✅");
+  setEstado("Notas guardadas");
 }
 
 async function eliminarHerramienta() {
@@ -108,6 +108,7 @@ async function eliminarHerramienta() {
     return;
   }
 
+  location.reload();
   setEstado("✅ Eliminada. Regresando...");
   setTimeout(() => (location.href = "index.html"), 600);
 }
@@ -116,3 +117,4 @@ btnGuardar.addEventListener("click", guardarNotas);
 btnEliminar.addEventListener("click", eliminarHerramienta);
 
 cargarDetalle();
+
