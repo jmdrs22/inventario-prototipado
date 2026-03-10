@@ -4,15 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Agregar / Editar herramienta</title>
-
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
   <header class="topbar">
     <h1 id="pageTitle">Agregar herramienta</h1>
-
     <div class="actions">
       <a class="btn" href="index.html">← Volver</a>
     </div>
@@ -22,9 +19,7 @@
     <div id="estado" class="estado"></div>
 
     <form id="form" class="form">
-
-      <!-- Área -->
-      <label class="label">Área *</label>
+      <label class="label" for="area">Área *</label>
       <select id="area" required>
         <option value="">Selecciona un área</option>
         <option value="Area creativa">Área creativa</option>
@@ -34,111 +29,65 @@
         <option value="Bodega de herramientas">Bodega de herramientas</option>
       </select>
 
-      <!-- Nombre -->
-      <label class="label">Nombre *</label>
+      <label class="label" for="nombre">Nombre *</label>
       <input id="nombre" required placeholder="Ej. Taladro inalámbrico" />
 
-      <!-- Código -->
-      <label class="label">Código</label>
+      <label class="label" for="codigo">Código</label>
       <input id="codigo" placeholder="Ej. H-001" />
 
-      <!-- Cantidad -->
-      <label class="label">Cantidad *</label>
+      <label class="label" for="cantidad">Cantidad *</label>
       <input id="cantidad" type="number" min="1" value="1" required />
 
-      <!-- Ubicación -->
-      <label class="label">Ubicación</label>
+      <label class="label" for="ubicacion">Ubicación</label>
       <input id="ubicacion" placeholder="Ej. Gabinete A, repisa 2" />
 
-      <!-- Estado -->
       <label class="label">Estado</label>
       <div class="estado-selector">
-        <button type="button" class="estado-btn success active" data-estado="bueno">
-          ✔ Buen estado
-        </button>
-
-        <button type="button" class="estado-btn warning" data-estado="mantenimiento">
-          ⚠ Mantenimiento
-        </button>
-
-        <button type="button" class="estado-btn danger" data-estado="urgente">
-          ✖ Urgente
-        </button>
+        <button type="button" class="estado-btn success active" data-estado="bueno">✔ Buen estado</button>
+        <button type="button" class="estado-btn warning" data-estado="mantenimiento">⚠ Mantenimiento</button>
+        <button type="button" class="estado-btn danger" data-estado="urgente">✖ Urgente</button>
       </div>
-
       <input type="hidden" id="estadoValor" value="bueno" />
 
-      <!-- Imagen -->
       <label class="label">Imagen de la herramienta</label>
 
-      <div class="file-field">
-        <!-- Input oculto -->
-        <input
-          id="imagen"
-          type="file"
-          accept="image/*,.jpg,.jpeg,.png,.webp"
-          style="display:none;"
-        />
+      <input
+        id="imagen"
+        type="file"
+        accept="image/*,.jpg,.jpeg,.png,.webp"
+        style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
+      />
 
-        <!-- Botones -->
-        <div class="row" style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button type="button" id="btnElegirImagen">
-            📁 Subir imagen
-          </button>
-
-          <button type="button" id="btnTomarFoto">
-            📷 Tomar foto
-          </button>
-        </div>
-
-        <!-- Nombre archivo -->
-        <div id="fileName" class="file-name">
-          Ningún archivo seleccionado
-        </div>
+      <div class="row" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" id="btnElegirImagen">📁 Subir imagen</button>
+        <button type="button" id="btnTomarFoto">📷 Tomar foto</button>
       </div>
 
-      <!-- Cámara -->
+      <div id="fileName" class="file-name">Ningún archivo seleccionado</div>
+
       <div id="cameraBox" style="display:none; margin-top:12px;">
         <video
           id="cameraVideo"
           autoplay
           playsinline
+          muted
           style="width:100%; max-width:360px; border-radius:12px;"
         ></video>
 
         <div class="row" style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
-          <button type="button" id="btnCapturarFoto">
-            📸 Capturar
-          </button>
-
-          <button type="button" id="btnCancelarFoto">
-            ❌ Cancelar
-          </button>
+          <button type="button" id="btnCapturarFoto">📸 Capturar</button>
+          <button type="button" id="btnCancelarFoto">❌ Cancelar</button>
         </div>
       </div>
 
-      <!-- Canvas oculto -->
       <canvas id="cameraCanvas" style="display:none;"></canvas>
 
-      <!-- Vista previa -->
-      <img
-        id="preview"
-        class="img-preview"
-        alt="Vista previa"
-        style="display:none;"
-      />
+      <img id="preview" class="img-preview" alt="Vista previa" style="display:none;" />
+      <p class="hint">Si editas: si no eliges imagen, se conserva la anterior.</p>
 
-      <p class="hint">
-        Si editas: si no eliges imagen, se conserva la anterior.
-      </p>
-
-      <!-- Guardar -->
       <div class="row">
-        <button type="submit" id="btnGuardarTool">
-          💾 Guardar
-        </button>
+        <button type="submit" id="btnGuardarTool">Guardar</button>
       </div>
-
     </form>
   </main>
 

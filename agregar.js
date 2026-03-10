@@ -1,7 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
   const SUPABASE_URL = "https://vvoilctmowzfsjpbtxcw.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_CB3EcmLwEIyeLgORI8xQZg_NGFlXsy3";
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let supabaseClient = null;
+  if (window.supabase && typeof window.supabase.createClient === "function") {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
 
   const estadoEl = document.getElementById("estado");
   const pageTitle = document.getElementById("pageTitle");
@@ -37,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let fotoCapturada = null;
 
   function setEstado(msg, isError = false) {
+    if (!estadoEl) return;
     estadoEl.textContent = msg;
     estadoEl.className = "estado" + (isError ? " error" : "");
   }
@@ -57,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function setEstadoActivo(valor) {
     estadoBtns.forEach((b) => b.classList.remove("active"));
     const btn = Array.from(estadoBtns).find((b) => b.dataset.estado === valor);
-    (btn || document.querySelector(".estado-btn.success"))?.classList.add("active");
+    if (btn) btn.classList.add("active");
     estadoValor.value = valor || "bueno";
   }
 
@@ -69,25 +74,28 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!file) {
       fileName.textContent = "Ningún archivo seleccionado";
       preview.style.display = "none";
-      preview.src = "";
+      preview.removeAttribute("src");
       return;
     }
 
     fileName.textContent = file.name;
-    preview.src = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    preview.src = objectUrl;
     preview.style.display = "block";
   }
 
   if (imagenInput) {
     imagenInput.addEventListener("change", () => {
-      const file = imagenInput.files?.[0];
+      const file = imagenInput.files && imagenInput.files[0] ? imagenInput.files[0] : null;
       fotoCapturada = null;
       mostrarPreviewArchivo(file);
+      setEstado(file ? "Imagen seleccionada." : "No se seleccionó imagen.");
     });
   }
 
   if (btnElegirImagen) {
     btnElegirImagen.addEventListener("click", () => {
+      setEstado("Abriendo selector de imágenes...");
       imagenInput.click();
     });
   }
@@ -95,22 +103,24 @@ document.addEventListener("DOMContentLoaded", () => {
   async function abrirCamara() {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setEstado("Tu navegador no soporta acceso a cámara.", true);
+        setEstado("Tu navegador no soporta la cámara.", true);
         return;
       }
 
       cerrarCamara();
 
       cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: {
+          facingMode: { ideal: "environment" }
+        },
         audio: false
       });
 
       cameraVideo.srcObject = cameraStream;
       cameraBox.style.display = "block";
-      setEstado("Cámara lista. Toma la foto.");
+      setEstado("Cámara abierta. Presiona Capturar.");
     } catch (err) {
-      console.error(err);
+      console.error("Error al abrir cámara:", err);
       setEstado("No se pudo abrir la cámara: " + (err?.message || String(err)), true);
     }
   }
@@ -120,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
       cameraStream.getTracks().forEach((track) => track.stop());
       cameraStream = null;
     }
-
     cameraVideo.srcObject = null;
     cameraBox.style.display = "none";
   }
@@ -132,23 +141,23 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const videoWidth = cameraVideo.videoWidth;
-      const videoHeight = cameraVideo.videoHeight;
+      const vw = cameraVideo.videoWidth;
+      const vh = cameraVideo.videoHeight;
 
-      if (!videoWidth || !videoHeight) {
-        setEstado("La cámara aún no está lista. Intenta de nuevo.", true);
+      if (!vw || !vh) {
+        setEstado("La cámara todavía no está lista.", true);
         return;
       }
 
-      cameraCanvas.width = videoWidth;
-      cameraCanvas.height = videoHeight;
+      cameraCanvas.width = vw;
+      cameraCanvas.height = vh;
 
       const ctx = cameraCanvas.getContext("2d");
-      ctx.drawImage(cameraVideo, 0, 0, videoWidth, videoHeight);
+      ctx.drawImage(cameraVideo, 0, 0, vw, vh);
 
-      const blob = await new Promise((resolve) =>
-        cameraCanvas.toBlob(resolve, "image/jpeg", 0.92)
-      );
+      const blob = await new Promise((resolve) => {
+        cameraCanvas.toBlob(resolve, "image/jpeg", 0.92);
+      });
 
       if (!blob) {
         setEstado("No se pudo capturar la foto.", true);
@@ -164,21 +173,28 @@ document.addEventListener("DOMContentLoaded", () => {
       cerrarCamara();
       setEstado("Foto capturada correctamente.");
     } catch (err) {
-      console.error(err);
+      console.error("Error al capturar foto:", err);
       setEstado("Error al capturar foto: " + (err?.message || String(err)), true);
     }
   }
 
   if (btnTomarFoto) {
-    btnTomarFoto.addEventListener("click", abrirCamara);
+    btnTomarFoto.addEventListener("click", () => {
+      abrirCamara();
+    });
   }
 
   if (btnCapturarFoto) {
-    btnCapturarFoto.addEventListener("click", capturarFoto);
+    btnCapturarFoto.addEventListener("click", () => {
+      capturarFoto();
+    });
   }
 
   if (btnCancelarFoto) {
-    btnCancelarFoto.addEventListener("click", cerrarCamara);
+    btnCancelarFoto.addEventListener("click", () => {
+      cerrarCamara();
+      setEstado("Captura cancelada.");
+    });
   }
 
   function makeUUID() {
@@ -197,17 +213,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function subirImagen(file) {
+    if (!supabaseClient) {
+      throw new Error("Supabase no está disponible.");
+    }
+
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const safeExt = ["jpg", "jpeg", "png", "webp"].includes(ext) ? ext : "jpg";
     const path = `${makeUUID()}.${safeExt}`;
 
-    const { error: uploadError } = await supabaseClient.storage
+    const { error: uploadError } = await supabaseClient
+      .storage
       .from("herramientas")
       .upload(path, file, { upsert: false });
 
     if (uploadError) throw uploadError;
 
-    const { data } = supabaseClient.storage
+    const { data } = supabaseClient
+      .storage
       .from("herramientas")
       .getPublicUrl(path);
 
@@ -224,6 +246,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!id) {
       modo = "crear";
       setEstadoActivo("bueno");
+      return;
+    }
+
+    if (!supabaseClient) {
+      setEstado("Supabase no cargó correctamente.", true);
       return;
     }
 
@@ -264,16 +291,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    setEstado(modo === "crear" ? "Guardando..." : "Guardando cambios...");
 
     try {
+      if (!supabaseClient) {
+        setEstado("Supabase no cargó correctamente.", true);
+        return;
+      }
+
       if (!areaSel.value) {
         setEstado("Selecciona un área.", true);
         return;
       }
 
+      setEstado(modo === "crear" ? "Guardando..." : "Guardando cambios...");
+
       let imagen_url = imagenActual;
-      const file = fotoCapturada || imagenInput?.files?.[0];
+      const file = fotoCapturada || (imagenInput.files && imagenInput.files[0] ? imagenInput.files[0] : null);
 
       if (file) {
         setEstado("Subiendo imagen...");
@@ -291,10 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       if (modo === "crear") {
-        const { error } = await supabaseClient
-          .from("herramientas")
-          .insert(payload);
-
+        const { error } = await supabaseClient.from("herramientas").insert(payload);
         if (error) throw error;
 
         setEstado("Herramienta guardada correctamente. Redirigiendo...");
@@ -304,11 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const { error } = await supabaseClient
-        .from("herramientas")
-        .update(payload)
-        .eq("id", id);
-
+      const { error } = await supabaseClient.from("herramientas").update(payload).eq("id", id);
       if (error) throw error;
 
       setEstado("Cambios guardados correctamente. Redirigiendo...");
@@ -316,12 +342,10 @@ document.addEventListener("DOMContentLoaded", () => {
         location.href = "index.html";
       }, 700);
     } catch (err) {
-      console.error(err);
+      console.error("Error al guardar:", err);
       setEstado("Error: " + (err?.message || String(err)), true);
     }
   });
 
   init();
 });
-
-<script src="agregar.js"></script>
