@@ -2,10 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const SUPABASE_URL = "https://vvoilctmowzfsjpbtxcw.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_CB3EcmLwEIyeLgORI8xQZg_NGFlXsy3";
 
-  let supabaseClient = null;
-  if (window.supabase && typeof window.supabase.createClient === "function") {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
+  // Inicializar Supabase de forma directa y segura
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const estadoEl = document.getElementById("estado");
   const pageTitle = document.getElementById("pageTitle");
@@ -82,6 +80,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const objectUrl = URL.createObjectURL(file);
     preview.src = objectUrl;
     preview.style.display = "block";
+    
+    // Liberar la URL cuando ya no se necesite
+    preview.onload = () => URL.revokeObjectURL(objectUrl);
   }
 
   if (imagenInput) {
