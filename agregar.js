@@ -284,17 +284,11 @@ form.addEventListener("submit", async (e) => {
 
       if (error) throw error;
 
-      setEstado("Herramienta guardada correctamente");
-      form.reset();
-      cantidad.value = 1;
-      imagenActual = null;
-      fotoCapturada = null;
-      setEstadoActivo("bueno");
-      fileName.textContent = "Ningún archivo seleccionado";
-      preview.style.display = "none";
-      preview.src = "";
-      cerrarCamara();
-      return;
+       setEstado("Herramienta guardada correctamente. Redirigiendo...");
+       setTimeout(() => {
+         location.href = "index.html"; // ← menú principal
+       }, 700);
+      return,
     }
 
     const { error } = await supabaseClient
@@ -315,6 +309,7 @@ form.addEventListener("submit", async (e) => {
 });
 
 init();
+
 
 
 
