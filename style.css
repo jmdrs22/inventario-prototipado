@@ -103,7 +103,7 @@ body{
 .muted{color:var(--muted); margin:0 0 10px; font-size:13px}
 
 /* INPUTS */
-input, textarea{
+input, textarea, select{
   font:inherit;
   border:1px solid var(--border);
   background:var(--surface);
@@ -112,7 +112,7 @@ input, textarea{
   outline:none;
   transition: box-shadow .2s ease, border-color .2s ease;
 }
-input:focus, textarea:focus{
+input:focus, textarea:focus, select:focus{
   border-color:#cfd4dc;
   box-shadow:0 0 0 6px var(--focus);
 }
@@ -180,13 +180,21 @@ input:focus, textarea:focus{
   display:flex;
   align-items:center;
   justify-content:center;
+  position:relative;
 }
 .card-img img{
   width:100%;
   height:100%;
-  object-fit:contain;        /* ✅ para ver la foto completa */
+  object-fit:contain;
   background:#f0f0ee;
   display:block;
+}
+.card-img::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to bottom, transparent 70%, rgba(0,0,0,0.02));
+  pointer-events:none;
 }
 .card-body{padding:14px}
 .card-title h2{
@@ -239,13 +247,23 @@ input:focus, textarea:focus{
   box-shadow:var(--shadow);
   overflow:hidden;
 }
+.detalle-img{
+  position:relative;
+}
 .detalle-img img{
   width:100%;
   max-height:520px;
   height:100%;
-  object-fit:contain;       /* ✅ completa */
+  object-fit:contain;
   background:#f0f0ee;
   display:block;
+}
+.detalle-img::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to bottom, transparent 70%, rgba(0,0,0,0.02));
+  pointer-events:none;
 }
 .detalle-info{padding:14px}
 .detalle-info h2{
@@ -310,7 +328,7 @@ input:focus, textarea:focus{
   background:#f0f0ee;
 }
 
-/* ESTADO SELECTOR (tipo Bootstrap outline, ligero) */
+/* ESTADO SELECTOR */
 .estado-selector{display:flex; gap:10px; flex-wrap:wrap}
 .estado-btn{
   padding:10px 14px;
@@ -365,7 +383,7 @@ input:focus, textarea:focus{
 }
 .link:hover{border-bottom-color:#111827}
 
-/* ===== ÁREAS (pantalla inicial) ===== */
+/* ÁREAS (pantalla inicial) */
 .areas-grid{
   display:grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -374,11 +392,14 @@ input:focus, textarea:focus{
 }
 
 .area-card{
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  overflow:hidden;
   text-align:left;
   border:1px solid var(--border, #e5e7eb);
   background: rgba(255,255,255,.92);
   border-radius: 18px;
-  padding: 16px;
   box-shadow: 0 12px 28px rgba(17,24,39,.06);
   cursor:pointer;
   transition: transform .12s ease, box-shadow .2s ease;
@@ -387,36 +408,6 @@ input:focus, textarea:focus{
 .area-card:hover{
   transform: translateY(-2px);
   box-shadow: 0 18px 38px rgba(17,24,39,.10);
-}
-
-.area-card h2{
-  margin:0 0 6px;
-  font-size: 16px;
-  font-weight: 900;
-}
-
-.area-card p{
-  margin:0;
-  color: var(--muted, #6b7280);
-  font-weight: 600;
-  font-size: 13px;
-}
-
-select{
-  width:100%;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid var(--border, #e5e7eb);
-  background:#fff;
-  font:inherit;
-}
-
-/* ===== ÁREAS CON IMAGEN ===== */
-.area-card{
-  display:flex;
-  flex-direction:column;
-  padding:0;
-  overflow:hidden;
 }
 
 .area-img{
@@ -428,7 +419,7 @@ select{
 .area-img img{
   width:100%;
   height:100%;
-  object-fit:cover; /* aquí SÍ conviene cover */
+  object-fit:cover;
   display:block;
 }
 
@@ -449,3 +440,60 @@ select{
   font-weight:600;
 }
 
+/* TOOLTIP */
+[data-tooltip]{
+  position:relative;
+  cursor:help;
+}
+[data-tooltip]:hover::after{
+  content:attr(data-tooltip);
+  position:absolute;
+  bottom:100%;
+  left:50%;
+  transform:translateX(-50%);
+  padding:6px 10px;
+  background:#111827;
+  color:white;
+  font-size:12px;
+  font-weight:500;
+  border-radius:8px;
+  white-space:nowrap;
+  z-index:100;
+  pointer-events:none;
+  margin-bottom:8px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* RESPONSIVE MÓVIL */
+@media (max-width: 640px){
+  .hero-content{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  
+  .hero-actions{
+    flex-direction:column;
+  }
+  
+  .hero-actions input,
+  .hero-actions .btn{
+    width:100%;
+  }
+  
+  .card-img{
+    height:160px;
+  }
+  
+  .areas-grid{
+    grid-template-columns:1fr;
+  }
+  
+  .estado-selector{
+    flex-direction:column;
+  }
+  
+  .estado-btn{
+    width:100%;
+    text-align:center;
+  }
+}
