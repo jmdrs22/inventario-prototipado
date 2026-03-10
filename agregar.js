@@ -20,9 +20,20 @@ const imagenInput = document.getElementById("imagen");
 const preview = document.getElementById("preview");
 const fileName = document.getElementById("fileName");
 
+const btnElegirImagen = document.getElementById("btnElegirImagen");
+const btnTomarFoto = document.getElementById("btnTomarFoto");
+const btnCapturarFoto = document.getElementById("btnCapturarFoto");
+const btnCancelarFoto = document.getElementById("btnCancelarFoto");
+
+const cameraBox = document.getElementById("cameraBox");
+const cameraVideo = document.getElementById("cameraVideo");
+const cameraCanvas = document.getElementById("cameraCanvas");
+
 let modo = "crear";
 let id = null;
 let imagenActual = null;
+let cameraStream = null;
+let fotoCapturada = null;
 
 function setEstado(msg, isError = false) {
   estadoEl.textContent = msg;
@@ -43,38 +54,125 @@ function getAreaFromUrl() {
 }
 
 function setEstadoActivo(valor) {
-  estadoBtns.forEach(b => b.classList.remove("active"));
-  const btn = Array.from(estadoBtns).find(b => b.dataset.estado === valor);
+  estadoBtns.forEach((b) => b.classList.remove("active"));
+  const btn = Array.from(estadoBtns).find((b) => b.dataset.estado === valor);
   (btn || document.querySelector(".estado-btn.success"))?.classList.add("active");
   estadoValor.value = valor || "bueno";
 }
 
-estadoBtns.forEach(btn => {
+estadoBtns.forEach((btn) => {
   btn.addEventListener("click", () => setEstadoActivo(btn.dataset.estado));
 });
 
-// Preview imagen
-imagenInput?.addEventListener("change", () => {
-  const file = imagenInput.files?.[0];
+function mostrarPreviewArchivo(file) {
   if (!file) {
     fileName.textContent = "Ningún archivo seleccionado";
     preview.style.display = "none";
     preview.src = "";
     return;
   }
+
   fileName.textContent = file.name;
   preview.src = URL.createObjectURL(file);
   preview.style.display = "block";
+}
+
+imagenInput?.addEventListener("change", () => {
+  const file = imagenInput.files?.[0];
+  fotoCapturada = null;
+  mostrarPreviewArchivo(file);
 });
 
+btnElegirImagen?.addEventListener("click", () => {
+  imagenInput.click();
+});
+
+async function abrirCamara() {
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setEstado("Tu navegador no soporta acceso a cámara.", true);
+      return;
+    }
+
+    cerrarCamara();
+
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+
+    cameraVideo.srcObject = cameraStream;
+    cameraBox.style.display = "block";
+    setEstado("Cámara lista. Toma la foto.");
+  } catch (err) {
+    console.error(err);
+    setEstado("No se pudo abrir la cámara: " + (err?.message || String(err)), true);
+  }
+}
+
+function cerrarCamara() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((track) => track.stop());
+    cameraStream = null;
+  }
+
+  cameraVideo.srcObject = null;
+  cameraBox.style.display = "none";
+}
+
+async function capturarFoto() {
+  try {
+    if (!cameraStream) {
+      setEstado("La cámara no está activa.", true);
+      return;
+    }
+
+    const videoWidth = cameraVideo.videoWidth;
+    const videoHeight = cameraVideo.videoHeight;
+
+    if (!videoWidth || !videoHeight) {
+      setEstado("La cámara aún no está lista. Intenta de nuevo.", true);
+      return;
+    }
+
+    cameraCanvas.width = videoWidth;
+    cameraCanvas.height = videoHeight;
+
+    const ctx = cameraCanvas.getContext("2d");
+    ctx.drawImage(cameraVideo, 0, 0, videoWidth, videoHeight);
+
+    const blob = await new Promise((resolve) =>
+      cameraCanvas.toBlob(resolve, "image/jpeg", 0.92)
+    );
+
+    if (!blob) {
+      setEstado("No se pudo capturar la foto.", true);
+      return;
+    }
+
+    const file = new File([blob], `foto-${Date.now()}.jpg`, {
+      type: "image/jpeg"
+    });
+
+    fotoCapturada = file;
+    mostrarPreviewArchivo(file);
+    cerrarCamara();
+    setEstado("Foto capturada correctamente.");
+  } catch (err) {
+    console.error(err);
+    setEstado("Error al capturar foto: " + (err?.message || String(err)), true);
+  }
+}
+
+btnTomarFoto?.addEventListener("click", abrirCamara);
+btnCapturarFoto?.addEventListener("click", capturarFoto);
+btnCancelarFoto?.addEventListener("click", cerrarCamara);
+
 function makeUUID() {
-  // 1) Si el navegador soporta randomUUID (Chrome moderno, Android moderno)
   if (window.crypto && typeof window.crypto.randomUUID === "function") {
     return window.crypto.randomUUID();
   }
 
-  // 2) Fallback (funciona en iPhone/Safari viejos)
-  // No es “perfecto” como UUID real, pero sirve perfecto para nombres de archivos.
   return (
     "id-" +
     Date.now().toString(16) +
@@ -90,25 +188,20 @@ async function subirImagen(file) {
   const safeExt = ["jpg", "jpeg", "png", "webp"].includes(ext) ? ext : "jpg";
   const path = `${makeUUID()}.${safeExt}`;
 
-  const { error: uploadError } = await supabaseClient
-    .storage
-    .from("herramientas") // <- bucket (minúsculas)
+  const { error: uploadError } = await supabaseClient.storage
+    .from("herramientas")
     .upload(path, file, { upsert: false });
 
   if (uploadError) throw uploadError;
 
-  const { data } = supabaseClient
-    .storage
+  const { data } = supabaseClient.storage
     .from("herramientas")
     .getPublicUrl(path);
 
   return data.publicUrl;
 }
 
-
-// Cargar si es edición o precargar área si viene desde index
 async function init() {
-  // precargar área si viene desde index.html?area=...
   const areaUrl = getAreaFromUrl();
   if (areaUrl && !getId()) {
     areaSel.value = areaUrl;
@@ -167,7 +260,8 @@ form.addEventListener("submit", async (e) => {
     }
 
     let imagen_url = imagenActual;
-    const file = imagenInput?.files?.[0];
+    const file = fotoCapturada || imagenInput?.files?.[0];
+
     if (file) {
       setEstado("Subiendo imagen...");
       imagen_url = await subirImagen(file);
@@ -194,10 +288,12 @@ form.addEventListener("submit", async (e) => {
       form.reset();
       cantidad.value = 1;
       imagenActual = null;
+      fotoCapturada = null;
       setEstadoActivo("bueno");
       fileName.textContent = "Ningún archivo seleccionado";
       preview.style.display = "none";
       preview.src = "";
+      cerrarCamara();
       return;
     }
 
@@ -209,8 +305,9 @@ form.addEventListener("submit", async (e) => {
     if (error) throw error;
 
     setEstado("Cambios guardados correctamente");
-    setTimeout(() => (location.href = `detalle.html?id=${encodeURIComponent(id)}`), 600);
-
+    setTimeout(() => {
+      location.href = `detalle.html?id=${encodeURIComponent(id)}`;
+    }, 600);
   } catch (err) {
     console.error(err);
     setEstado("Error: " + (err?.message || String(err)), true);
@@ -218,6 +315,7 @@ form.addEventListener("submit", async (e) => {
 });
 
 init();
+
 
 
 
