@@ -51,13 +51,42 @@
 
       <label class="label">Imagen de la herramienta</label>
       <div class="file-field">
-        <input id="imagen" type="file" accept="image/*,.jpg,.jpeg,.png" class="file-input" />
-        <label for="imagen" class="file-btn">
-          <span class="file-btn-title">Subir / Tomar foto</span>
-          <span class="file-btn-sub">PNG o JPG</span>
-        </label>
+        <input
+          id="imagen"
+          type="file"
+          accept="image/*,.jpg,.jpeg,.png,.webp"
+          class="file-input"
+          hidden
+        />
+
+        <div class="row" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" id="btnElegirImagen" class="file-btn">
+            Subir imagen
+          </button>
+
+          <button type="button" id="btnTomarFoto" class="file-btn">
+            Tomar foto
+          </button>
+        </div>
+
         <div id="fileName" class="file-name">Ningún archivo seleccionado</div>
       </div>
+
+      <div id="cameraBox" style="display:none; margin-top:12px;">
+        <video
+          id="cameraVideo"
+          autoplay
+          playsinline
+          style="width:100%; max-width:360px; border-radius:12px;"
+        ></video>
+
+        <div class="row" style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <button type="button" id="btnCapturarFoto">Capturar</button>
+          <button type="button" id="btnCancelarFoto">Cancelar</button>
+        </div>
+      </div>
+
+      <canvas id="cameraCanvas" style="display:none;"></canvas>
 
       <img id="preview" class="img-preview" alt="Vista previa" style="display:none;" />
       <p class="hint">Si editas: si no eliges imagen, se conserva la anterior.</p>
