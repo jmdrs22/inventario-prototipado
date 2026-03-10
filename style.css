@@ -383,7 +383,7 @@ input:focus, textarea:focus, select:focus{
 }
 .link:hover{border-bottom-color:#111827}
 
-/* ÁREAS (pantalla inicial) */
+/* ===== ÁREAS (pantalla inicial) - VERSIÓN ORIGINAL RESTAURADA ===== */
 .areas-grid{
   display:grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -423,24 +423,25 @@ input:focus, textarea:focus, select:focus{
   display:block;
 }
 
-.area-info{
+/* IMPORTANTE: Usando .area-inf (tu clase original) */
+.area-inf{
   padding:14px;
 }
 
-.area-info h2{
+.area-inf h2{
   margin:0 0 6px;
-  font-size:16px;
+  font-size:16px;  /* Tamaño original restaurado */
   font-weight:900;
 }
 
-.area-info p{
+.area-inf p{
   margin:0;
   color:var(--muted, #6b7280);
-  font-size:13px;
+  font-size:13px;  /* Tamaño original restaurado */
   font-weight:600;
 }
 
-/* TOOLTIP */
+/* TOOLTIP (opcional - solo si quieres usarlo) */
 [data-tooltip]{
   position:relative;
   cursor:help;
@@ -497,3 +498,4 @@ input:focus, textarea:focus, select:focus{
     text-align:center;
   }
 }
+
