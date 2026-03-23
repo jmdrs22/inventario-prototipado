@@ -6,6 +6,7 @@
   <title>Inventario - Diseño y Prototipado</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs2-fix@0.0.1/qrcode.min.js"></script>
 </head>
 <body>
   <header class="hero">
@@ -22,6 +23,7 @@
         <a id="btnAgregar" class="btn btn-primary" href="agregar.html">+ Agregar herramienta</a>
         <button id="btnActualizar" class="btn">Actualizar</button>
         <button id="btnToggleVista" class="btn">Vista lista</button>
+        <button id="btnMostrarQR" class="btn qr-btn">QR del área</button>
         <button id="btnVolverAreas" class="btn">← Áreas</button>
       </div>
     </div>
@@ -32,55 +34,60 @@
 
     <!-- Pantalla de ÁREAS -->
     <section id="areasScreen" class="areas-grid">
-      <button class="area-card" data-area="Area creativa">
+      <div class="area-card" data-area="Area creativa">
         <div class="area-img">
           <img src="assets/areas/area-creativa.jpg" alt="Área creativa">
         </div>
-        <div class="area-inf">
-         <h2>Área creativa</h2>
-         <p>Área recreativa</p>
+        <div class="area-info">
+          <h2>Área creativa</h2>
+          <p>Área recreativa</p>
+          <button class="btn-qr-area" data-area="Area creativa">QR</button>
         </div>
-      </button>
+      </div>
       
-      <button class="area-card" data-area="Area digital">
+      <div class="area-card" data-area="Area digital">
         <div class="area-img">
           <img src="assets/areas/area-digital.jpg" alt="Area digital">
         </div>
-        <div class="area-inf">
-         <h2>Área digital</h2>
-         <p>Equipo de cómputo.</p>
+        <div class="area-info">
+          <h2>Área digital</h2>
+          <p>Equipo de cómputo.</p>
+          <button class="btn-qr-area" data-area="Area digital">QR</button>
         </div>
-      </button>
+      </div>
 
-      <button class="area-card" data-area="Granja 3D">
+      <div class="area-card" data-area="Granja 3D">
         <div class="area-img">
           <img src="assets/areas/granja-3d.jpg" alt="Granja 3D">
         </div>
-        <div class="area-inf">
-         <h2>Granja 3D</h2>
-         <p>Impresoras 3D, filamento.</p>
+        <div class="area-info">
+          <h2>Granja 3D</h2>
+          <p>Impresoras 3D, filamento.</p>
+          <button class="btn-qr-area" data-area="Granja 3D">QR</button>
         </div>
-      </button>
+      </div>
 
-      <button class="area-card" data-area="Taller">
+      <div class="area-card" data-area="Taller">
         <div class="area-img">
           <img src="assets/areas/taller.jpg" alt="Taller">
         </div>
-        <div class="area-inf">
-         <h2>Taller</h2>
-         <p>Area de trabajo y herramienta pesada.</p>
+        <div class="area-info">
+          <h2>Taller</h2>
+          <p>Area de trabajo y herramienta pesada.</p>
+          <button class="btn-qr-area" data-area="Taller">📱 QR</button>
         </div>
-      </button>
+      </div>
 
-      <button class="area-card" data-area="Bodega de herramientas">
+      <div class="area-card" data-area="Bodega de herramientas">
         <div class="area-img">
           <img src="assets/areas/bodega.jpg" alt="Bodega de herramientas">
         </div>
-        <div class="area-inf">
-         <h2>Bodega de herramientas</h2>
-         <p>Resguardo general, repuestos y almacenaje.</p>
+        <div class="area-info">
+          <h2>Bodega de herramientas</h2>
+          <p>Resguardo general, repuestos y almacenaje.</p>
+          <button class="btn-qr-area" data-area="Bodega de herramientas">📱 QR</button>
         </div>
-      </button>
+      </div>
     </section>
 
     <!-- Pantalla INVENTARIO (se muestra al elegir área) -->
@@ -92,7 +99,7 @@
       <section id="sheetWrap" class="sheet" style="display:none;">
         <div class="sheet-header">
           <h2 id="tituloArea">Vista lista</h2>
-          <p class="muted">Como Excel. Click en “Ver” para ir al detalle.</p>
+          <p class="muted">Como Excel. Click en "Ver" para ir al detalle.</p>
         </div>
 
         <div class="table-wrap">
@@ -114,6 +121,20 @@
       </section>
     </section>
   </main>
+
+  <!-- Modal para QR -->
+  <div id="qrModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <h3 id="qrModalTitle">Código QR del área</h3>
+      <div id="qrCodeContainer" class="qr-container"></div>
+      <div class="qr-info">
+        <p>Escanea este código QR para acceder directamente al inventario de esta área.</p>
+        <p class="qr-url" id="qrUrl"></p>
+      </div>
+      <button id="btnDownloadQR" class="btn">💾 Descargar QR</button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

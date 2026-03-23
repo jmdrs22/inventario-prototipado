@@ -12,6 +12,9 @@
   --badge-success:#2b6f4a;  /* Verde azulado */
   --badge-warning:#b57c2b;  /* Mostaza */
   --badge-danger:#b53b3b;   /* Rojo */
+  
+  --radius: 18px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 *{box-sizing:border-box}
@@ -105,7 +108,7 @@ body{
 .muted{color:var(--muted); margin:0 0 10px; font-size:13px}
 
 /* INPUTS */
-input, textarea{
+input, textarea, select{
   font:inherit;
   border:1px solid var(--border);
   background:var(--surface);
@@ -114,7 +117,7 @@ input, textarea{
   outline:none;
   transition: box-shadow .2s ease, border-color .2s ease;
 }
-input:focus, textarea:focus{
+input:focus, textarea:focus, select:focus{
   border-color:#cfd4dc;
   box-shadow:0 0 0 6px var(--focus);
 }
@@ -155,6 +158,32 @@ input:focus, textarea:focus{
 .btn-primary:hover{
   background:#0b1220;
   border-color:#0b1220;
+}
+
+.qr-btn {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: white;
+}
+.qr-btn:hover {
+  background: #15803d;
+}
+
+.btn-qr-area {
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #1e4a6f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+.btn-qr-area:hover {
+  background: #0f3a57;
+  transform: translateY(-1px);
 }
 
 /* GRID CARDS */
@@ -379,9 +408,9 @@ input:focus, textarea:focus{
   text-align:left;
   border:1px solid var(--border, #e5e7eb);
   background: rgba(255,255,255,.92);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 12px 28px rgba(17,24,39,.06);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
   cursor:pointer;
   transition: transform .12s ease, box-shadow .2s ease;
 }
@@ -389,36 +418,6 @@ input:focus, textarea:focus{
 .area-card:hover{
   transform: translateY(-2px);
   box-shadow: 0 18px 38px rgba(17,24,39,.10);
-}
-
-.area-card h2{
-  margin:0 0 6px;
-  font-size: 16px;
-  font-weight: 900;
-}
-
-.area-card p{
-  margin:0;
-  color: var(--muted, #6b7280);
-  font-weight: 600;
-  font-size: 13px;
-}
-
-select{
-  width:100%;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid var(--border, #e5e7eb);
-  background:#fff;
-  font:inherit;
-}
-
-/* ===== ÁREAS CON IMAGEN ===== */
-.area-card{
-  display:flex;
-  flex-direction:column;
-  padding:0;
-  overflow:hidden;
 }
 
 .area-img{
@@ -430,7 +429,7 @@ select{
 .area-img img{
   width:100%;
   height:100%;
-  object-fit:cover; /* aquí SÍ conviene cover */
+  object-fit:cover;
   display:block;
 }
 
@@ -451,18 +450,99 @@ select{
   font-weight:600;
 }
 
+/* MODAL QR */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  animation: fadeIn 0.3s;
+}
+
+.modal-content {
+  background-color: var(--surface);
+  margin: 5% auto;
+  padding: 24px;
+  border-radius: var(--radius);
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  animation: slideIn 0.3s;
+  text-align: center;
+}
+
+.modal-close {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+.qr-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+}
+
+.qr-info {
+  margin: 15px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.qr-url {
+  word-break: break-all;
+  font-size: 11px;
+  background: #f0f0ee;
+  padding: 8px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Skeleton loader */
 .skeleton {
   background: linear-gradient(
     90deg,
-    #f0f0ee 25%,    /* Color base */
-    #f8f8f6 50%,    /* Color más claro para el brillo */
-    #f0f0ee 75%     /* Vuelve al color base */
+    #f0f0ee 25%,
+    #f8f8f6 50%,
+    #f0f0ee 75%
   );
-  background-size: 200% 100%;  /* El gradiente es más grande que el elemento */
-  animation: loading 1.5s infinite;  /* Animación infinita */
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }   /* Empieza fuera a la derecha */
-  100% { background-position: -200% 0; } /* Termina fuera a la izquierda */
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

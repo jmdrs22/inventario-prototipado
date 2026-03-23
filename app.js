@@ -15,6 +15,7 @@ const busqueda = document.getElementById("busqueda");
 const btnToggleVista = document.getElementById("btnToggleVista");
 const btnVolverAreas = document.getElementById("btnVolverAreas");
 const btnAgregar = document.getElementById("btnAgregar");
+const btnMostrarQR = document.getElementById("btnMostrarQR");
 const tituloArea = document.getElementById("tituloArea");
 
 // Views
@@ -22,8 +23,17 @@ const grid = document.getElementById("grid");
 const sheetWrap = document.getElementById("sheetWrap");
 const tablaBody = document.getElementById("tablaBody");
 
+// Modal QR
+const qrModal = document.getElementById("qrModal");
+const qrModalTitle = document.getElementById("qrModalTitle");
+const qrCodeContainer = document.getElementById("qrCodeContainer");
+const qrUrl = document.getElementById("qrUrl");
+const btnDownloadQR = document.getElementById("btnDownloadQR");
+const modalClose = document.querySelector(".modal-close");
+
 // Área actual
 let areaActual = null;
+let currentQR = null;
 
 // Data
 let cache = [];
@@ -48,6 +58,78 @@ function badgeHTML(estado) {
   if (estado === "urgente") return `<span class="badge danger">Urgente</span>`;
   return `<span class="badge neutral">Sin estado</span>`;
 }
+
+// Función para generar URL del área
+function getAreaUrl(area) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("area", area);
+  // Eliminar otros parámetros que no sean necesarios
+  url.searchParams.delete("id");
+  return url.toString();
+}
+
+// Función para generar QR
+function generarQR(area) {
+  const areaUrl = getAreaUrl(area);
+  qrUrl.textContent = areaUrl;
+  
+  // Limpiar contenedor anterior
+  qrCodeContainer.innerHTML = "";
+  
+  // Crear nuevo QR
+  new QRCode(qrCodeContainer, {
+    text: areaUrl,
+    width: 256,
+    height: 256,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  
+  return areaUrl;
+}
+
+// Función para descargar QR como imagen
+async function descargarQR(area) {
+  const canvas = qrCodeContainer.querySelector("canvas");
+  if (!canvas) {
+    setEstado("Error: No se pudo generar el QR", true);
+    return;
+  }
+  
+  const link = document.createElement("a");
+  link.download = `qr-${area.replace(/\s+/g, "-").toLowerCase()}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+// Mostrar modal de QR
+function mostrarModalQR(area) {
+  qrModalTitle.textContent = `QR - ${area}`;
+  const areaUrl = generarQR(area);
+  qrModal.style.display = "block";
+  
+  // Guardar referencia para descarga
+  currentQR = area;
+}
+
+// Cerrar modal
+function cerrarModal() {
+  qrModal.style.display = "none";
+}
+
+// Eventos del modal
+if (modalClose) modalClose.addEventListener("click", cerrarModal);
+if (btnDownloadQR) {
+  btnDownloadQR.addEventListener("click", () => {
+    if (currentQR) descargarQR(currentQR);
+  });
+}
+
+// Cerrar modal al hacer click fuera
+window.addEventListener("click", (e) => {
+  if (e.target === qrModal) cerrarModal();
+});
 
 function renderGrid(lista) {
   grid.innerHTML = "";
@@ -196,22 +278,47 @@ function volverAreas() {
   history.replaceState({}, "", url.toString());
 }
 
-// Click en cards de área
-document.querySelectorAll(".area-card").forEach(btn => {
-  btn.addEventListener("click", () => abrirArea(btn.dataset.area));
+// Click en cards de área (ahora con manejo separado)
+document.querySelectorAll(".area-card").forEach(card => {
+  card.addEventListener("click", (e) => {
+    // Si el click fue en el botón QR, no abrir el área
+    if (e.target.classList && e.target.classList.contains("btn-qr-area")) {
+      return;
+    }
+    const area = card.dataset.area;
+    if (area) abrirArea(area);
+  });
 });
+
+// Botones QR de las áreas
+document.querySelectorAll(".btn-qr-area").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const area = btn.dataset.area;
+    if (area) mostrarModalQR(area);
+  });
+});
+
+// Botón QR en toolbar
+if (btnMostrarQR) {
+  btnMostrarQR.addEventListener("click", () => {
+    if (areaActual) mostrarModalQR(areaActual);
+  });
+}
 
 // Toolbar
-btnActualizar.addEventListener("click", cargar);
-busqueda.addEventListener("input", aplicarFiltroYRender);
+if (btnActualizar) btnActualizar.addEventListener("click", cargar);
+if (busqueda) busqueda.addEventListener("input", aplicarFiltroYRender);
 
-btnToggleVista.addEventListener("click", () => {
-  vista = (vista === "grid") ? "list" : "grid";
-  btnToggleVista.textContent = (vista === "grid") ? "Vista lista" : "Vista cuadrícula";
-  aplicarFiltroYRender();
-});
+if (btnToggleVista) {
+  btnToggleVista.addEventListener("click", () => {
+    vista = (vista === "grid") ? "list" : "grid";
+    btnToggleVista.textContent = (vista === "grid") ? "Vista lista" : "Vista cuadrícula";
+    aplicarFiltroYRender();
+  });
+}
 
-btnVolverAreas.addEventListener("click", volverAreas);
+if (btnVolverAreas) btnVolverAreas.addEventListener("click", volverAreas);
 
 // Si viene desde un QR por área (URL con ?area=...)
 const params = new URLSearchParams(location.search);
