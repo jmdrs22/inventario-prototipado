@@ -109,7 +109,7 @@ async function eliminarHerramienta() {
   }
 
   location.reload();
-  setEstado("✅ Eliminada. Regresando...");
+  setEstado("Eliminada. Regresando...");
   setTimeout(() => (location.href = "index.html"), 600);
 }
 
