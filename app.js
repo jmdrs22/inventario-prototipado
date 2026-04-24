@@ -213,11 +213,15 @@ function renderGrid(lista) {
   grid.innerHTML = "";
 
   if (!lista.length) {
-    setEstado(`No hay herramientas en: ${areaActual}`);
+    setEstado(areaActual ? `No hay herramientas en: ${areaActual}` : "Inventario vacío");
     return;
   }
 
-  setEstado(`Área: ${areaActual} · ${lista.length} herramienta(s)`);
+  if (areaActual) {
+    setEstado(`Área: ${areaActual} · ${lista.length} herramienta(s)`);
+  } else {
+    setEstado(`Inventario general · ${lista.length} herramienta(s)`);
+  }
 
   for (const h of lista) {
     const card = document.createElement("article");
@@ -304,6 +308,22 @@ async function cargar() {
   aplicarFiltroYRender();
 }
 
+async function cargarGeneral() {
+  setEstado("Cargando inventario general...");
+
+  const { data, error } = await supabaseClient
+    .from("herramientas")
+    .select("*");
+
+  if (error) {
+    setEstado(error.message, true);
+    return;
+  }
+
+  cache = data || [];
+  aplicarFiltroYRender();
+}
+
 // ================= NAVEGACIÓN =================
 
 function abrirArea(area) {
@@ -342,7 +362,11 @@ document.querySelectorAll(".btn-qr-area").forEach(btn => {
   });
 });
 
-if (btnActualizar) btnActualizar.addEventListener("click", cargar);
+if (btnActualizar) btnActualizar.addEventListener("click", () => {
+  if (areaActual) cargar();
+  else cargarGeneral();
+});
+
 if (busqueda) busqueda.addEventListener("input", aplicarFiltroYRender);
 
 if (btnToggleVista) {
@@ -362,5 +386,12 @@ const areaFromUrl = params.get("area");
 if (areaFromUrl) {
   abrirArea(areaFromUrl);
 } else {
-  setEstado("Selecciona un área.");
+  // INVENTARIO GENERAL AL ESCANEAR QR
+  areaActual = null;
+
+  areasScreen.style.display = "none";
+  inventarioScreen.style.display = "block";
+  toolbar.style.display = "flex";
+
+  cargarGeneral();
 }
