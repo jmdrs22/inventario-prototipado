@@ -4,10 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inventario - Diseño y Prototipado</title>
+
   <link rel="stylesheet" href="style.css" />
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs2-fix@0.0.1/qrcode.min.js"></script>
 </head>
+
 <body>
   <header class="hero">
     <div class="hero-overlay"></div>
@@ -25,6 +28,7 @@
         <button id="btnToggleVista" class="btn">Vista lista</button>
         <button id="btnMostrarQR" class="btn qr-btn">QR del área</button>
         <button id="btnVolverAreas" class="btn">← Áreas</button>
+        <button id="btnQRGeneral" class="btn qr-general-btn">QR Inicio</button>
       </div>
     </div>
   </header>
@@ -34,6 +38,21 @@
 
     <!-- Pantalla de ÁREAS -->
     <section id="areasScreen" class="areas-grid">
+
+      <!-- QR General -->
+      <div class="area-card qr-general-card" id="btnQRGeneralAreas">
+        <div class="area-img" style="background: linear-gradient(135deg, #1e4a6f, #16a34a);">
+          <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 48px;">
+          </div>
+        </div>
+        <div class="area-info">
+          <h2>QR General</h2>
+          <p>Código QR para acceso rápido a la página principal</p>
+          <button class="btn-qr-area" id="btnQRGeneralCard">Generar QR</button>
+        </div>
+      </div>
+
+      <!-- Áreas -->
       <div class="area-card" data-area="Area creativa">
         <div class="area-img">
           <img src="assets/areas/area-creativa.jpg" alt="Área creativa">
@@ -44,7 +63,7 @@
           <button class="btn-qr-area" data-area="Area creativa">QR</button>
         </div>
       </div>
-      
+
       <div class="area-card" data-area="Area digital">
         <div class="area-img">
           <img src="assets/areas/area-digital.jpg" alt="Area digital">
@@ -88,10 +107,12 @@
           <button class="btn-qr-area" data-area="Bodega de herramientas">QR</button>
         </div>
       </div>
+
     </section>
 
-    <!-- Pantalla INVENTARIO (se muestra al elegir área) -->
+    <!-- Pantalla INVENTARIO -->
     <section id="inventarioScreen" style="display:none;">
+      
       <!-- Vista Cuadrícula -->
       <section id="grid" class="grid"></section>
 
@@ -119,19 +140,23 @@
           </table>
         </div>
       </section>
+
     </section>
   </main>
 
-  <!-- Modal para QR -->
+  <!-- Modal QR -->
   <div id="qrModal" class="modal">
     <div class="modal-content">
       <span class="modal-close">&times;</span>
       <h3 id="qrModalTitle">Código QR del área</h3>
+
       <div id="qrCodeContainer" class="qr-container"></div>
+
       <div class="qr-info">
         <p>Escanea este código QR para acceder directamente al inventario de esta área.</p>
         <p class="qr-url" id="qrUrl"></p>
       </div>
+
       <button id="btnDownloadQR" class="btn">Descargar QR</button>
     </div>
   </div>
