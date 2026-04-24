@@ -32,11 +32,9 @@ const qrUrl = document.getElementById("qrUrl");
 const btnDownloadQR = document.getElementById("btnDownloadQR");
 const modalClose = document.querySelector(".modal-close");
 
-// Área actual
+// Estado
 let areaActual = null;
 let currentQR = null;
-
-// Data
 let cache = [];
 let vista = "grid";
 
@@ -65,9 +63,8 @@ function badgeHTML(estado) {
 // ================= QR POR ÁREA =================
 
 function getAreaUrl(area) {
-  const url = new URL(window.location.href);
+  const url = new URL(window.location.origin + window.location.pathname);
   url.searchParams.set("area", area);
-  url.searchParams.delete("id");
   return url.toString();
 }
 
@@ -89,12 +86,11 @@ function generarQR(area) {
   return areaUrl;
 }
 
-// ================= QR GENERAL =================
+// ================= QR GENERAL (CORREGIDO) =================
 
 function getHomeUrl() {
-  const url = new URL(window.location.href);
-  url.search = "";
-  return url.toString();
+  // 🔥 URL LIMPIA SIN PARAMETROS
+  return window.location.origin + window.location.pathname;
 }
 
 function generarQRGeneral() {
@@ -139,10 +135,7 @@ function cerrarModal() {
 
 function descargarQR(area) {
   const canvas = qrCodeContainer.querySelector("canvas");
-  if (!canvas) {
-    setEstado("Error: No se pudo generar el QR", true);
-    return;
-  }
+  if (!canvas) return setEstado("Error al generar QR", true);
 
   const link = document.createElement("a");
   link.download = `qr-${area.replace(/\s+/g, "-").toLowerCase()}.png`;
@@ -152,10 +145,7 @@ function descargarQR(area) {
 
 function descargarQRGeneral() {
   const canvas = qrCodeContainer.querySelector("canvas");
-  if (!canvas) {
-    setEstado("Error: No se pudo generar el QR", true);
-    return;
-  }
+  if (!canvas) return setEstado("Error al generar QR", true);
 
   const link = document.createElement("a");
   link.download = "qr-inicio-inventario.png";
@@ -173,11 +163,7 @@ window.addEventListener("click", (e) => {
 
 if (btnDownloadQR) {
   btnDownloadQR.addEventListener("click", () => {
-    if (currentQR) {
-      descargarQR(currentQR);
-    } else {
-      descargarQRGeneral();
-    }
+    currentQR ? descargarQR(currentQR) : descargarQRGeneral();
   });
 }
 
@@ -217,11 +203,11 @@ function renderGrid(lista) {
     return;
   }
 
-  if (areaActual) {
-    setEstado(`Área: ${areaActual} · ${lista.length} herramienta(s)`);
-  } else {
-    setEstado(`Inventario general · ${lista.length} herramienta(s)`);
-  }
+  setEstado(
+    areaActual
+      ? `Área: ${areaActual} · ${lista.length} herramienta(s)`
+      : `Inventario general · ${lista.length} herramienta(s)`
+  );
 
   for (const h of lista) {
     const card = document.createElement("article");
@@ -299,10 +285,7 @@ async function cargar() {
     .select("*")
     .eq("area", areaActual);
 
-  if (error) {
-    setEstado(error.message, true);
-    return;
-  }
+  if (error) return setEstado(error.message, true);
 
   cache = data || [];
   aplicarFiltroYRender();
@@ -315,10 +298,7 @@ async function cargarGeneral() {
     .from("herramientas")
     .select("*");
 
-  if (error) {
-    setEstado(error.message, true);
-    return;
-  }
+  if (error) return setEstado(error.message, true);
 
   cache = data || [];
   aplicarFiltroYRender();
@@ -340,9 +320,12 @@ function abrirArea(area) {
 
 function volverAreas() {
   areaActual = null;
+
   areasScreen.style.display = "grid";
   inventarioScreen.style.display = "none";
   toolbar.style.display = "none";
+
+  setEstado("Selecciona un área.");
 }
 
 // ================= EVENTOS GENERALES =================
@@ -362,10 +345,11 @@ document.querySelectorAll(".btn-qr-area").forEach(btn => {
   });
 });
 
-if (btnActualizar) btnActualizar.addEventListener("click", () => {
-  if (areaActual) cargar();
-  else cargarGeneral();
-});
+if (btnActualizar) {
+  btnActualizar.addEventListener("click", () => {
+    areaActual ? cargar() : cargarGeneral();
+  });
+}
 
 if (busqueda) busqueda.addEventListener("input", aplicarFiltroYRender);
 
@@ -386,7 +370,7 @@ const areaFromUrl = params.get("area");
 if (areaFromUrl) {
   abrirArea(areaFromUrl);
 } else {
-  // INVENTARIO GENERAL AL ESCANEAR QR
+  // QR GENERAL → INVENTARIO COMPLETO
   areaActual = null;
 
   areasScreen.style.display = "none";
