@@ -379,3 +379,15 @@ if (areaFromUrl) {
 
   cargarGeneral();
 }
+document.querySelectorAll(".area-card").forEach(card => {
+  card.addEventListener("click", (e) => {
+
+    // IGNORAR tarjeta QR GENERAL
+    if (card.id === "btnQRGeneralAreas") return;
+
+    if (e.target.classList.contains("btn-qr-area")) return;
+
+    const area = card.dataset.area;
+    if (area) abrirArea(area);
+  });
+});
